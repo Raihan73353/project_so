@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit Lowongan' if job else 'Pasang Lowongan Baru' }} - PortalKarir{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb small">
+                <li class="breadcrumb-item"><a href="{{ url_for('company_dashboard') }}" class="text-decoration-none">Dashboard Perusahaan</a></li>
+                <li class="breadcrumb-item active">{{ 'Edit Lowongan' if job else 'Pasang Lowongan Baru' }}</li>
+            </ol>
+        </nav>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h4 class="fw-bold mb-1">{{ 'Edit Lowongan Pekerjaan' if job else 'Pasang Lowongan Baru' }}</h4>
+                <p class="text-muted small mb-4">Lengkapi detail posisi agar kandidat yang tepat mudah menemukan lowongan Anda.</p>
+
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="title" class="form-label fw-semibold">Judul Posisi <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="title" name="title" required
+                               value="{{ job.title if job else '' }}"
+                               placeholder="Contoh: Backend Developer Intern (Python/Flask)">
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="job_type" class="form-label fw-semibold">Tipe Pekerjaan <span class="text-danger">*</span></label>
+                            <select class="form-select" id="job_type" name="job_type" required>
+                                {% set selected_type = job.job_type if job else 'Magang' %}
+                                <option value="Magang" {% if selected_type == 'Magang' %}selected{% endif %}>Magang</option>
+                                <option value="Full-Time" {% if selected_type == 'Full-Time' %}selected{% endif %}>Full-Time</option>
+                                <option value="Part-Time" {% if selected_type == 'Part-Time' %}selected{% endif %}>Part-Time</option>
+                                <option value="Remote" {% if selected_type == 'Remote' %}selected{% endif %}>Remote</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="location" class="form-label fw-semibold">Lokasi Penempatan <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="location" name="location" required
+                                   value="{{ job.location if job else '' }}"
+                                   placeholder="Contoh: Jakarta Selatan / Remote">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="salary_range" class="form-label fw-semibold">Kisaran Gaji / Uang Saku (Opsional)</label>
+                        <input type="text" class="form-control" id="salary_range" name="salary_range"
+                               value="{{ job.salary_range if job and job.salary_range else '' }}"
+                               placeholder="Contoh: Rp 2.500.000 - Rp 3.500.000 / bulan">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label fw-semibold">Deskripsi Pekerjaan <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="description" name="description" rows="4" required
+                                  placeholder="Jelaskan tanggung jawab dan lingkup pekerjaan...">{{ job.description if job else '' }}</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="requirements" class="form-label fw-semibold">Kualifikasi & Persyaratan <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="requirements" name="requirements" rows="4" required
+                                  placeholder="Tuliskan skill, pendidikan, atau pengalaman yang dibutuhkan...">{{ job.requirements if job else '' }}</textarea>
+                    </div>
+
+                    {% if job %}
+                        <div class="form-check form-switch mb-4">
+                            <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {% if job.is_active %}checked{% endif %}>
+                            <label class="form-check-label fw-semibold" for="is_active">
+                                Lowongan Aktif (Tampilkan di halaman pencarian publik)
+                            </label>
+                        </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a href="{{ url_for('company_dashboard') }}" class="btn btn-outline-secondary">Batal</a>
+                        <button type="submit" class="btn btn-primary fw-semibold">
+                            {{ 'Simpan Perubahan' if job else 'Publikasikan Lowongan' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

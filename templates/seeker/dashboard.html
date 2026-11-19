@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}Dashboard Pelamar - PortalKarir{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">Dashboard Pencari Kerja</h3>
+        <p class="text-muted small mb-0">
+            <i class="bi bi-person-badge me-1"></i>{{ current_user.name }} ({{ current_user.email }})
+        </p>
+    </div>
+    <a href="{{ url_for('index') }}" class="btn btn-primary fw-semibold">
+        <i class="bi bi-search me-1"></i>Cari Lowongan Lain
+    </a>
+</div>
+
+<!-- Kartu Statistik Status Lamaran -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <span class="text-muted small d-block">Total Lamaran</span>
+                <h3 class="fw-bold mb-0 mt-1">{{ applications|length }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <span class="text-muted small d-block">Menunggu / Review</span>
+                <h3 class="fw-bold text-warning mb-0 mt-1">{{ in_progress_count }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <span class="text-muted small d-block">Diterima (Accepted)</span>
+                <h3 class="fw-bold text-success mb-0 mt-1">{{ accepted_count }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <span class="text-muted small d-block">Ditolak (Rejected)</span>
+                <h3 class="fw-bold text-danger mb-0 mt-1">{{ rejected_count }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabel Riwayat Lamaran -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3">
+        <h5 class="fw-bold mb-0">Riwayat Lamaran Saya</h5>
+    </div>
+    <div class="card-body p-0">
+        {% if applications %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light small">
+                        <tr>
+                            <th class="ps-3">Posisi & Perusahaan</th>
+                            <th>Lokasi</th>
+                            <th>Tanggal Lamar</th>
+                            <th>Status Seleksi</th>
+                            <th class="text-end pe-3">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for app_item in applications %}
+                            <tr>
+                                <td class="ps-3">
+                                    <a href="{{ url_for('job_detail', job_id=app_item.job.id) }}" class="fw-semibold text-decoration-none text-dark d-block">
+                                        {{ app_item.job.title }}
+                                    </a>
+                                    <small class="text-primary fw-semibold">
+                                        <i class="bi bi-building me-1"></i>{{ app_item.job.employer.company_name }}
+                                    </small>
+                                    <span class="badge bg-light text-secondary border ms-1">{{ app_item.job.job_type }}</span>
+                                </td>
+                                <td class="small text-muted">{{ app_item.job.location }}</td>
+                                <td class="small text-muted">{{ app_item.applied_at.strftime('%d %b %Y') }}</td>
+                                <td>
+                                    {% if app_item.status == 'Pending' %}
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    {% elif app_item.status == 'Reviewed' %}
+                                        <span class="badge bg-info text-dark">Reviewed</span>
+                                    {% elif app_item.status == 'Accepted' %}
+                                        <span class="badge bg-success">Accepted</span>
+                                    {% elif app_item.status == 'Rejected' %}
+                                        <span class="badge bg-danger">Rejected</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-3">
+                                    <div class="d-inline-flex gap-1">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#detailModal{{ app_item.id }}">
+                                            <i class="bi bi-eye"></i> Detail
+                                        </button>
+                                        {% if app_item.status == 'Pending' %}
+                                            <form method="POST" action="{{ url_for('withdraw_application', app_id=app_item.id) }}" onsubmit="return confirm('Batalkan lamaran pada posisi ini?');">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Batalkan Lamaran">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- Modal Detail Lamaran yang Dikirim -->
+                            <div class="modal fade" id="detailModal{{ app_item.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h6 class="modal-title fw-bold">Detail Lamaran &mdash; {{ app_item.job.title }}</h6>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body small">
+                                            <p class="mb-2">
+                                                <strong>Perusahaan:</strong> {{ app_item.job.employer.company_name }}<br>
+                                                <strong>Status:</strong> {{ app_item.status }}<br>
+                                                <strong>Portofolio / CV:</strong>
+                                                {% if app_item.portfolio_url %}
+                                                    <a href="{{ app_item.portfolio_url }}" target="_blank" rel="noopener noreferrer">{{ app_item.portfolio_url }}</a>
+                                                {% else %}
+                                                    <span class="text-muted">Tidak dilampirkan</span>
+                                                {% endif %}
+                                            </p>
+                                            <div class="bg-light p-3 rounded">
+                                                <strong class="d-block text-muted mb-1">Cover Letter Anda:</strong>
+                                                <div class="formatted-text text-dark">{{ app_item.cover_letter }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5 px-3">
+                <i class="bi bi-send-x display-4 text-muted mb-3 d-block"></i>
+                <h6 class="fw-bold">Belum ada lamaran yang dikirim</h6>
+                <p class="text-muted small mb-3">Mulai jelajahi lowongan magang dan karir yang sesuai dengan keahlian Anda.</p>
+                <a href="{{ url_for('index') }}" class="btn btn-primary btn-sm">Jelajahi Lowongan</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
